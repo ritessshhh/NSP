@@ -29,25 +29,38 @@ These files contain questions and answers for the Next Sentence Prediction (NSP)
 ### Python Scripts
 
 * **`generate-nsp.py`**
-    * **Description**: [Overall purpose of this script. e.g., This script generates Next Sentence Prediction (NSP) questions from the text corpora.]
+    * **Description**: This script processes raw text files to generate Next Sentence Prediction (NSP) questions. It splits stories into sentences, creates question contexts, and pairs a correct next sentence with a plausible "distractor" sentence from later in the story.
     * **Functions**:
-        * `function_name_1()`: [Explain what this function does.]
-        * `function_name_2()`: [Explain what this function does.]
-        * `main()`: [Explain the main execution flow.]
-
-* **`gpt-gemini-llama-COT.py`**
-    * **Description**: [Overall purpose of this script. e.g., This script uses GPT, Gemini, and Llama models to answer questions using a Chain-of-Thought prompting strategy.]
-    * **Functions**:
-        * `load_model()`: [Explain what this function does.]
-        * `generate_answer()`: [Explain what this function does.]
-        * `evaluate_results()`: [Explain what this function does.]
+        * `clean_text(s: str) -> str`: Takes a string and replaces all whitespace (like newlines, tabs, and multiple spaces) with a single space.
+        * `load_stories(filepath)`: Reads a text file and splits it into a list of individual stories. It assumes stories are separated by lines of three or more dashes.
+        * `split_sentences(text)`: Takes a block of text (a story) and splits it into a list of sentences based on punctuation marks (., !, ?).
+        * `generate_nsp_items(...)`: The core function that generates NSP questions from a list of sentences. For each possible context, it creates a correct answer (the next sentence) and a distractor (a sentence from further in the text), then randomizes their order (A/B). It also records metadata like context length and distractor distance.
 
 * **`gpt-gemini-llama.py`**
-    * **Description**: [Overall purpose of this script. e.g., This script uses GPT, Gemini, and Llama models for standard question answering.]
+    * **Description**: This script runs the standard NSP evaluation. It reads a CSV file of questions, sends them to the GPT, Gemini, and Llama APIs, and records their single-letter answers (A or B) back into the same CSV.
     * **Functions**:
-        * `function_name_1()`: [Explain what this function does.]
-        * `function_name_2()`: [Explain what this function does.]
-        * `function_name_3()`: [Explain what this function does.]
+        * `main(input_file)`: The main function that orchestrates the entire process. It handles API client initialization, data loading, iterating through questions, calling the models, and saving the results.
+        * `build_prompt(context, opt_a, opt_b)`: Creates the simple, direct prompt that asks the model to choose the next sentence, instructing it to reply with only a single letter.
+        * `ask_gpt(prompt)`: Sends the prompt to the OpenAI (GPT) API and returns the model's response.
+        * `ask_gemini(prompt, ...)`: Sends the prompt to the Google (Gemini) API. It includes a retry mechanism with a delay to handle potential server errors (like 503).
+        * `ask_llama(prompt)`: Sends the prompt to the Together API (for Llama) and returns the model's response.
+
+* **`gpt-gemini-llama-COT.py`**
+    * **Description**: This script runs the Chain-of-Thought (CoT) NSP evaluation. It is similar to the standard script but uses a more complex prompt that asks the models to provide step-by-step reasoning before giving their final answer. It then parses this detailed response to extract both the reasoning and the final single-letter answer.
+    * **Functions**:
+        * `extract_answer_and_reasoning(response_text)`: Parses the model's full text response. It finds the final single-letter answer (A or B) and separates it from the preceding text, which is considered the reasoning.
+        * `main(input_file)`: The main function that orchestrates the CoT evaluation process, similar to the standard script but using the CoT prompt and the answer extraction logic.
+        * `build_cot_prompt(context, opt_a, opt_b)`: Creates the detailed CoT prompt. It includes instructions in the target language (English, Hausa, or Swahili) for the model to provide reasoning first, followed by the single-letter answer on a new line.
+        * `ask_gpt(prompt)`, `ask_gemini(prompt, ...)` and `ask_llama(prompt)`: These functions work identically to the ones in the standard script, sending the CoT prompt to their respective APIs.
+
+* **`evaluation-metrics.py`**
+    * **Description**: This script contains functions to analyze the results of the model evaluations. It can sample data, calculate accuracy scores, and provide deeper analysis of where models went wrong.
+    * **Functions**:
+        * `sample_csv(input_file, output_file, n=1000)`: Creates a smaller, random sample from a larger CSV file. This is useful for creating consistent test sets.
+        * `validate_and_score(csv_path)`: Calculates and prints the accuracy for each model based on the standard evaluation results. It checks for valid 'A' or 'B' answers and compares them to the correct 'label'. It also saves all incorrect answers to a `wrong_answers.csv` file.
+        * `validate_and_score_COT(csv_path)`: Does the same as the function above, but for the Chain-of-Thought results (using the `_COT` columns in the CSV).
+        * `print_distractor_length_distribution_by_model()`: Analyzes the `wrong_answers.csv` file to show how often models failed based on the `distractor_distance` feature. This helps identify if models struggle more when the wrong answer is closer to the context.
+
 
 ## Getting Started
 
@@ -58,44 +71,30 @@ Instructions on how to set up the project locally.
 List any software or libraries that need to be installed.
 * python
 * pandas
-* transformers
+* openai
+* google-generativeai
+* together
+* python-dotenv
+
 ```bash
-pip install pandas transformers
+pip install pandas openai google-generativeai together python-dotenv
 ```
 
 ### Installation
 
 1.  Clone the repo
     ```sh
-    git clone [https://github.com/your_username/your_repository.git](https://github.com/your_username/your_repository.git)
+    git clone https://github.com/ritessshhh/NSP.git
     ```
-2.  Install packages
-    ```sh
-    pip install -r requirements.txt
+2.  Create a `.env` file in the root directory and add your API keys:
+    ```
+    OPENAI_API_KEY="your_openai_key"
+    GEMINI_API_KEY="your_gemini_key"
+    TOGETHER_API_KEY="your_together_key"
     ```
 
 ## Usage
 
-Provide examples of how to run your scripts and what the expected output is.
-
-_For more examples, please refer to the [Documentation](link_to_docs)_
-
-## Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
-
-## License
-
-Distributed under the [MIT License](https://opensource.org/licenses/MIT). See `LICENSE` for more information.
-
-## Contact
-
-Your Name - [@your_twitter](https://twitter.com/your_twitter) - email@example.com
-
-Project Link: [https://github.com/your_username/your_repository](https://github.com/your_username/your_repository)
+1.  **Generate Questions**: Run `generate-nsp.py` (configure the `INPUT_TXT` and `OUTPUT_CSV` variables inside the script for each language).
+2.  **Run Evaluations**: Run `gpt-gemini-llama.py` and `gpt-gemini-llama-COT.py`, passing the path to your question CSV as an argument to the `main` function.
+3.  **Analyze Results**: Run `evaluation-metrics.py` to see the accuracy scores and other analyses.
