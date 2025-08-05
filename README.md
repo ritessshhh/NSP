@@ -1,6 +1,6 @@
 # Testing Cross-Lingual Text Comprehension in LLMs Using Next Sentence Prediction
 
-The contains the codebase for everything we did in the research paper. From generating Dataset to Testing all 3 LLMs.
+This repository contains the codebase for the research paper, "Testing Cross-Lingual Text Comprehension in LLMs Using Next Sentence Prediction". It includes everything from dataset generation to testing all three Large Language Models (LLMs).
 
 ## About The Project
 
@@ -60,6 +60,17 @@ These files contain questions and answers for the Next Sentence Prediction (NSP)
         * `validate_and_score(csv_path)`: Calculates and prints the accuracy for each model based on the standard evaluation results. It checks for valid 'A' or 'B' answers and compares them to the correct 'label'. It also saves all incorrect answers to a `wrong_answers.csv` file.
         * `validate_and_score_COT(csv_path)`: Does the same as the function above, but for the Chain-of-Thought results (using the `_COT` columns in the CSV).
         * `print_distractor_length_distribution_by_model()`: Analyzes the `wrong_answers.csv` file to show how often models failed based on the `distractor_distance` feature. This helps identify if models struggle more when the wrong answer is closer to the context.
+
+* **`Testing_Cross_Lingual_Text_Comprehension_in_LLMs_Using_Next_Sentence_Prediction.ipynb`**
+    * **Description**: This Jupyter Notebook is used for in-depth feature engineering and data analysis. It computes semantic similarity and perplexity scores for the NSP question pairs to understand the underlying characteristics of the dataset and how they might influence model performance. It also contains functions for visualizing these features and analyzing model errors.
+    * **Functions**:
+        * `addNewFeatures(filePath, ...)`: Reads an NSP question CSV, samples it, and computes two new features: semantic similarity (using SentenceTransformers) and perplexity (using various causal LMs like UlizaLlama3, Mistral-7B, and HausaLlama). It saves the augmented data to a new CSV.
+        * `get_embedding(text)`: A helper function within `addNewFeatures` to encode text into a vector embedding.
+        * `compute_ppl(context, option)`: A helper function within `addNewFeatures` to calculate the perplexity of an option sentence given a context.
+        * `plot_data(data_path, title)`: Reads a feature-rich CSV and generates a series of plots to validate the dataset quality. These plots visualize relationships like distractor perplexity vs. distance and perplexity vs. context length.
+        * `save_wrong_answers_by_model(csv_path)`: Filters and saves the rows where each model answered incorrectly into separate CSV files for detailed error analysis.
+        * `main(csv_path)`: Orchestrates the error analysis by generating and plotting wrong predictions based on features like context length and distractor distance.
+
 
 
 ## Getting Started
