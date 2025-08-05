@@ -94,9 +94,6 @@ pip install pandas openai google-generativeai together python-dotenv
 ### Installation
 
 1.  Clone the repo
-    ```sh
-    git clone https://github.com/ritessshhh/NSP.git
-    ```
 2.  Create a `.env` file in the root directory and add your API keys:
     ```
     OPENAI_API_KEY="your_openai_key"
